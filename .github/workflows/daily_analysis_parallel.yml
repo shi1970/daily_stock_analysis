@@ -23,10 +23,7 @@ on:
         default: false
         type: boolean
 
-# 并发控制：每个股票分组独立运行，互不干扰
-concurrency:
-  group: stock-analysis-${{ matrix.stock_group || 'default' }}
-  cancel-in-progress: false
+# 【已删除全局的concurrency，移到Job内部】
 
 jobs:
   analyze:
@@ -34,10 +31,16 @@ jobs:
     # 添加超时限制，防止任务卡死
     timeout-minutes: 30
     
+    # ====================== 修复：concurrency移到Job内部，和matrix同作用域 ======================
+    concurrency:
+      group: stock-analysis-${{ matrix.stock_group || 'default' }}
+      cancel-in-progress: false
+    # =============================================================================================
+    
     # ====================== 核心修改：股票分组并发矩阵 ======================
     strategy:
       fail-fast: false      # 一个分组失败不影响其他分组继续运行
-      max-parallel: 10       # 最大并发数（免费版公共仓库建议 3-5，私有仓库建议 2）
+      max-parallel: 3       # 最大并发数（免费版私有仓库不要超过2，公共仓库可调大）
       matrix:
         # 定义你的股票分组名称（可自定义）
         stock_group: ["蓝筹组", "科技组", "海外组"]
